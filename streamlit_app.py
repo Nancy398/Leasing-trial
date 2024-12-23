@@ -9,6 +9,12 @@ from datetime import datetime, timedelta
 import time
 
 def read_file(name,sheet):
+  scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+  credentials = Credentials.from_service_account_info(
+  st.secrets["GOOGLE_APPLICATION_CREDENTIALS"], 
+  scopes=scope)
+  gc = gspread.authorize(credentials)
+  st.title('Leasing Data')
   worksheet = gc.open(name).worksheet(sheet)
   rows = worksheet.get_all_values()
   df = pd.DataFrame.from_records(rows)
@@ -22,13 +28,6 @@ def generate_pivot_table(df,index,columns):
 
 @st.cache_data(ttl=86400)
 def show_data():
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    credentials = Credentials.from_service_account_info(
-    st.secrets["GOOGLE_APPLICATION_CREDENTIALS"], 
-    scopes=scope)
-    gc = gspread.authorize(credentials)
-    st.title('Leasing Data')
-
     Leasing_US = read_file("MOO HOUSING PRICING SHEET","December Leasing Tracker")
     Leasing_US['Tenant Name'] = Leasing_US['Tenant Name'].replace('', pd.NA)
     # Leasing_US = Leasing_US.drop(columns=[''])
