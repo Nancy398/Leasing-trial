@@ -7,6 +7,7 @@ from gspread_dataframe import set_with_dataframe
 from datetime import datetime
 from datetime import datetime, timedelta
 import time
+from google.auth.transport.requests import AuthorizedSession
 
 st.write('Leasing Data')
 
@@ -24,13 +25,13 @@ def read_file(name,sheet):
   return df
   
 @st.cache_data(ttl=86400)
-def open_file(name,sheet):
+def open_file(url):
   scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
   credentials = Credentials.from_service_account_info(
   st.secrets["GOOGLE_APPLICATION_CREDENTIALS"], 
   scopes=scope)
-  gc = gspread.authorize(credentials)
-  worksheet = gc.open(name).worksheet(sheet)
+  gc = AuthorizedSession(credentials)
+  worksheet = gc.get(url)
   return worksheet
   
 
@@ -155,7 +156,7 @@ final_data = Temp[Temp.duplicated(subset = ['Tenant','Property','Renewal'],keep=
 
 # target_spreadsheet_id = 'Leasing Database'  # 目标表格的ID
 # target_sheet_name = 'Sheet1'  # 目标表格的工作表名称
-target_sheet = open_file('Leasing Database','Sheet1')
+target_sheet = open_file('https://docs.google.com/spreadsheets/d/1vAr0oN1kMvvKbnHl-mvG-bCsVhP8ZIBJR6DexLAwHPM/edit?gid=0#gid=0')
 
 set_with_dataframe(target_sheet, final_data, row=(len(old) + 2),include_column_header=False)
 
