@@ -155,9 +155,9 @@ final_data = Temp[Temp.duplicated(subset = ['Tenant','Property','Renewal'],keep=
 
 # target_spreadsheet_id = 'Leasing Database'  # 目标表格的ID
 # target_sheet_name = 'Sheet1'  # 目标表格的工作表名称
-# target_sheet = read_file('Leasing Database','Sheet1')
+target_sheet = open_file('Leasing Database','Sheet1')
 
-set_with_dataframe(old, final_data, row=(len(old) + 2),include_column_header=False)
+set_with_dataframe(target_sheet, final_data, row=(len(old) + 2),include_column_header=False)
 
 while True:
     st.write(f"Last Update: {time.strftime('%Y-%m-%d')}")
