@@ -148,17 +148,21 @@ styled_pivot_table = df_reshaped.style.set_table_styles(
     [{'selector': 'thead th', 'props': [('text-align', 'center')]}]
 )
 
-old = read_file('Leasing Database','Sheet1')
-old = old.astype(Leasing.dtypes.to_dict())
-combined_data = pd.concat([old, Leasing], ignore_index=True)
-Temp = pd.concat([old, combined_data])
-final_data = Temp[Temp.duplicated(subset = ['Tenant','Property','Renewal'],keep=False) == False]
-
-# target_spreadsheet_id = 'Leasing Database'  # 目标表格的ID
-# target_sheet_name = 'Sheet1'  # 目标表格的工作表名称
-target_sheet = open_file('https://docs.google.com/spreadsheets/d/1vAr0oN1kMvvKbnHl-mvG-bCsVhP8ZIBJR6DexLAwHPM/edit?gid=0#gid=0')
-
-set_with_dataframe(target_sheet, final_data, row=(len(old) + 2),include_column_header=False)
+@st.cache_data(ttl=86400)
+def save_data():
+  old = read_file('Leasing Database','Sheet1')
+  old = old.astype(Leasing.dtypes.to_dict())
+  combined_data = pd.concat([old, Leasing], ignore_index=True)
+  Temp = pd.concat([old, combined_data])
+  final_data = Temp[Temp.duplicated(subset = ['Tenant','Property','Renewal'],keep=False) == False]
+  
+  target_spreadsheet_id = 'Leasing Database'  # 目标表格的ID
+  target_sheet_name = 'Sheet1'  # 目标表格的工作表名称
+  target_sheet = gc.open(target_spreadsheet_id).worksheet(target_sheet_name)
+  
+  return set_with_dataframe(target_sheet, final_data, row=(len(old) + 2),include_column_header=False)
+  
+save_data()
 
 while True:
     st.write(f"Last Update: {time.strftime('%Y-%m-%d')}")
