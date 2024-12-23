@@ -183,6 +183,20 @@ Domestic =  st.multiselect(
     ["USC", "UCLA",'UCI','Leo'],
       default=["USC", "UCLA",'UCI','Leo']
 )
+start_date = datetime(2024, 10, 25)  # 2024年11月1日
+end_date = datetime(2024, 12, 31)  # 2024年12月31日
+
+# 创建日期区间选择器
+selected_dates = st.slider(
+    "选择日期区间:",
+    min_value=start_date,
+    max_value=end_date,
+    value=(start_date, end_date),  # 默认选定区间为12月1日至12月31日
+    format="YYYY-MM-DD"  # 格式化显示日期
+)
+
+# 显示选择的日期区间
+st.write(f"你选择的日期区间是: 从 {selected_dates[0].strftime('%Y-%m-%d')} 到 {selected_dates[1].strftime('%Y-%m-%d')}")
 
 
     # 显示选择的日期区间
