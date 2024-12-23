@@ -7,7 +7,6 @@ from gspread_dataframe import set_with_dataframe
 from datetime import datetime
 from datetime import datetime, timedelta
 import time
-from google.auth.transport.requests import AuthorizedSession
 
 st.title('Leasing Data')
 
