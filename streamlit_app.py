@@ -197,9 +197,6 @@ selected_dates = st.slider(
 
 # 显示选择的日期区间
 st.write(f"你选择的日期区间是: 从 {selected_dates[0].strftime('%Y-%m-%d')} 到 {selected_dates[1].strftime('%Y-%m-%d')}")
-
-
-    # 显示选择的日期区间
-st.write(f"你选择的日期区间是: 从 {selected_dates[0].strftime('%Y-%m-%d')} 到 {selected_dates[1].strftime('%Y-%m-%d')}")
-
 st.write('Leasing Data')
+
+show_data()
