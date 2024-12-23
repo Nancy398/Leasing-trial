@@ -170,5 +170,4 @@ save_data()
 
 while True:
     st.write(f"Last Update: {time.strftime('%Y-%m-%d')}")
-    time.sleep(86400)  # 每秒更新一次
     st.rerun()
