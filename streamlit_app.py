@@ -8,6 +8,8 @@ from datetime import datetime
 from datetime import datetime, timedelta
 import time
 
+st.write('Leasing Data')
+
 @st.cache_data(ttl=86400)
 def read_file(name,sheet):
   scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -142,7 +144,7 @@ final_data = Temp[Temp.duplicated(subset = ['Tenant','Property','Renewal'],keep=
 
 target_spreadsheet_id = 'Leasing Database'  # 目标表格的ID
 target_sheet_name = 'Sheet1'  # 目标表格的工作表名称
-target_sheet = gc.open(target_spreadsheet_id).worksheet(target_sheet_name)
+target_sheet = read_file(target_spreadsheet_id,target_sheet_name)
 
 set_with_dataframe(target_sheet, final_data, row=(len(old) + 2),include_column_header=False)
 
