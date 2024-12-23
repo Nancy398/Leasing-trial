@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import time
 from google.auth.transport.requests import AuthorizedSession
 
-st.write('Leasing Data')
+st.title('Leasing Data')
 
 @st.cache_data(ttl=86400)
 def read_file(name,sheet):
