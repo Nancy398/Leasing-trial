@@ -166,6 +166,3 @@ def save_data():
   return set_with_dataframe(target_sheet, final_data, row=(len(old) + 2),include_column_header=False)
   
 save_data()
-
-while True:
-    st.write(f"Last Update: {time.strftime('%Y-%m-%d')}")
