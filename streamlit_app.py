@@ -128,7 +128,7 @@ def show_data():
 
     # # Display the data as a table using `st.dataframe`.
     st.write('Leasing Data')
-    st.dataframe(
+    Df = st.dataframe(
         df_reshaped,
         use_container_width=True,
         # column_config={"selected_dates": st.column_config.TextColumn("Time")},
@@ -151,5 +151,53 @@ def show_data():
 
     st.write(f"Last Update: {time.strftime('%Y-%m-%d')}")
 
-    return None
-  
+    return Df
+
+   # # Show a multiselect widget with the genres using `st.multiselect`.
+  Region = st.multiselect(
+        "选择地区",
+        ["US", "China"],
+          default=["US", "China"]
+    )
+    
+  Term = st.multiselect(
+        "选择长/短",
+        ["Long", "Short"],
+          default=["Long", "Short"]
+    )
+    
+  Category =  st.multiselect(
+        "选择春/秋季",
+        ["Spring", "Fall"],
+          default=["Spring", "Fall"]
+    )
+    
+  Renewal =  st.multiselect(
+        "选择合同种类",
+        ["New", "Renew",'Transfer','Leo'],
+          default=["New", "Renew",'Transfer']
+    )
+    
+  Domestic =  st.multiselect(
+        "选择房屋地区",
+        ["USC", "UCLA",'UCI','Leo'],
+          default=["USC", "UCLA",'UCI','Leo']
+    )
+
+    # 设置起始日期和结束日期
+  start_date = datetime(2024, 10, 25)  # 2024年11月1日
+  end_date = datetime(2024, 12, 31)  # 2024年12月31日
+    
+    # 创建日期区间选择器
+  selected_dates = st.slider(
+        "选择日期区间:",
+        min_value=start_date,
+        max_value=end_date,
+        value=(start_date, end_date),  # 默认选定区间为12月1日至12月31日
+        format="YYYY-MM-DD"  # 格式化显示日期
+    )
+
+    # 显示选择的日期区间
+  st.write(f"你选择的日期区间是: 从 {selected_dates[0].strftime('%Y-%m-%d')} 到 {selected_dates[1].strftime('%Y-%m-%d')}")
+
+  st.write('Leasing Data')
