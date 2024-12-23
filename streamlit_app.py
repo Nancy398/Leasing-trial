@@ -170,4 +170,3 @@ save_data()
 
 while True:
     st.write(f"Last Update: {time.strftime('%Y-%m-%d')}")
-    st.rerun()
