@@ -11,7 +11,7 @@ from google.auth.transport.requests import AuthorizedSession
 
 st.title('Leasing Data')
 
-@st.cache_data(ttl=86400)
+@st.cache_data(ttl=300)
 def read_file(name,sheet):
   scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
   credentials = Credentials.from_service_account_info(
@@ -24,7 +24,7 @@ def read_file(name,sheet):
   df = pd.DataFrame(df.values[1:], columns=df.iloc[0])
   return df
   
-@st.cache_data(ttl=86400)
+@st.cache_data(ttl=300)
 def open_file(url):
   scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
   credentials = Credentials.from_service_account_info(
