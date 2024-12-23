@@ -15,7 +15,6 @@ def read_file(name,sheet):
   st.secrets["GOOGLE_APPLICATION_CREDENTIALS"], 
   scopes=scope)
   gc = gspread.authorize(credentials)
-  st.title('Leasing Data')
   worksheet = gc.open(name).worksheet(sheet)
   rows = worksheet.get_all_values()
   df = pd.DataFrame.from_records(rows)
@@ -65,26 +64,6 @@ Leasing_China['Signed Date'] = Leasing_China['Signed Date'].dt.date
 Leasing_China = Leasing_China.drop(['Lease term and length','Term start','Term Ends'],axis=1)
 Leasing = pd.concat([Leasing_US,Leasing_China], join='inner',ignore_index=True)
 
-def generate_pivot_table(df,index,columns):
-  Table = df.pivot_table(index=index, columns=columns, values='Number of beds',aggfunc='sum',fill_value=0,margins=True)
-  Table = Table.astype(int)
-  return Table
-
-from datetime import datetime
-from datetime import datetime, timedelta
-import time
-# today = datetime.now()
-# last_week = today - timedelta(weeks=1)
-# today_date = today.strftime('%Y-%m-%d')
-# last_week_date = last_week.strftime('%Y-%m-%d')
-# Leasing_Weekly = Leasing.loc[Leasing['Signed Date'].between(last_week_date,today_date) ]
-
-# Table = generate_pivot_table(Leasing_Weekly)
-# Table_All = generate_pivot_table(Leasing)
-# Table = Table.replace(0,"")
-# Table_All = Table_All.replace(0,"")
-
-
 Leasing_all = read_file('Leasing Database','Sheet1')
 Leasing_all['Number of beds'] = pd.to_numeric(Leasing_all['Number of beds'], errors='coerce')
 Leasing_all['Signed Date'] = pd.to_datetime(Leasing_all['Signed Date'],format = 'mixed')
@@ -120,8 +99,6 @@ Domestic =  st.multiselect(
       default=["USC", "UCLA",'UCI','Leo']
 )
 
-# # Show a slider widget with the years using `st.slider`.
-from datetime import datetime
 
 # 设置起始日期和结束日期
 start_date = datetime(2024, 10, 25)  # 2024年11月1日
