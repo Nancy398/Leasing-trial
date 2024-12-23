@@ -47,6 +47,7 @@ Leasing_US.columns=['Tenant','Property','Renewal','Agent','Lease Term','Term Cat
 Leasing_US.loc[Leasing_US['Renewal'] == "YES", 'Renewal'] = 'Renew'
 Leasing_US.loc[Leasing_US['Renewal'] == "NO", 'Renewal'] = 'New'
 Leasing_US.loc[Leasing_US['Renewal'] == "No", 'Renewal'] = 'New'
+Leasing_US.loc[Leasing_US['Renewal'] == "Lease Transfer", 'Renewal'] = 'Transfer'
 Leasing_US.loc[Leasing_US['Term Catorgy'] == "short", 'Term Catorgy'] = 'Short'
 Leasing_US['Number of beds'] = pd.to_numeric(Leasing_US['Number of beds'], errors='coerce')
 # Leasing_US['Number of beds'] = Leasing_US['Number of beds'].astype(int)
