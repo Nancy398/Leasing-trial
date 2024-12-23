@@ -22,6 +22,17 @@ def read_file(name,sheet):
   df = pd.DataFrame.from_records(rows)
   df = pd.DataFrame(df.values[1:], columns=df.iloc[0])
   return df
+  
+@st.cache_data(ttl=86400)
+def open_file(name,sheet):
+  scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+  credentials = Credentials.from_service_account_info(
+  st.secrets["GOOGLE_APPLICATION_CREDENTIALS"], 
+  scopes=scope)
+  gc = gspread.authorize(credentials)
+  worksheet = gc.open(name).worksheet(sheet)
+  return worksheet
+  
 
 def generate_pivot_table(df,index,columns):
   Table = df.pivot_table(index=index, columns=columns, values='Number of beds',aggfunc='sum',fill_value=0,margins=True)
@@ -144,7 +155,7 @@ final_data = Temp[Temp.duplicated(subset = ['Tenant','Property','Renewal'],keep=
 
 target_spreadsheet_id = 'Leasing Database'  # 目标表格的ID
 target_sheet_name = 'Sheet1'  # 目标表格的工作表名称
-target_sheet = read_file(target_spreadsheet_id,target_sheet_name)
+target_sheet = open_file(target_spreadsheet_id,target_sheet_name)
 
 set_with_dataframe(target_sheet, final_data, row=(len(old) + 2),include_column_header=False)
 
