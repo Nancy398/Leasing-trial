@@ -155,7 +155,7 @@ final_data = Temp[Temp.duplicated(subset = ['Tenant','Property','Renewal'],keep=
 
 target_spreadsheet_id = 'Leasing Database'  # 目标表格的ID
 target_sheet_name = 'Sheet1'  # 目标表格的工作表名称
-target_sheet = open_file(target_spreadsheet_id,target_sheet_name)
+target_sheet = open_file('Leasing Database','Sheet1')
 
 set_with_dataframe(target_sheet, final_data, row=(len(old) + 2),include_column_header=False)
 
