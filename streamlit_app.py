@@ -148,7 +148,7 @@ styled_pivot_table = df_reshaped.style.set_table_styles(
     [{'selector': 'thead th', 'props': [('text-align', 'center')]}]
 )
 
-@st.cache_data(ttl=86400)
+@st.cache_data(ttl=300)
 def save_data():
   old = read_file('Leasing Database','Sheet1')
   old = old.astype(Leasing.dtypes.to_dict())
