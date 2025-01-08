@@ -1,169 +1,146 @@
 import streamlit as st
-from google.oauth2.service_account import Credentials
 import pandas as pd
-import gspread
-import os
-from gspread_dataframe import set_with_dataframe
-from datetime import datetime
-from datetime import datetime, timedelta
-import time
 
-st.title('Leasing Data')
+# 数据文件路径
+USERS_FILE = "data/users.csv"
+DEALS_FILE = "data/deals.csv"
+FEEDBACKS_FILE = "data/feedbacks.csv"
 
-@st.cache_data(ttl=300)
-def read_file(name,sheet):
-  scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-  credentials = Credentials.from_service_account_info(
-  st.secrets["GOOGLE_APPLICATION_CREDENTIALS"], 
-  scopes=scope)
-  gc = gspread.authorize(credentials)
-  worksheet = gc.open(name).worksheet(sheet)
-  rows = worksheet.get_all_values()
-  df = pd.DataFrame.from_records(rows)
-  df = pd.DataFrame(df.values[1:], columns=df.iloc[0])
-  return df
-  
-@st.cache_data(ttl=300)
-def open_file(url):
-  scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-  credentials = Credentials.from_service_account_info(
-  st.secrets["GOOGLE_APPLICATION_CREDENTIALS"], 
-  scopes=scope)
-  gc = AuthorizedSession(credentials)
-  worksheet = gc.get(url)
-  return worksheet
-  
+# 读取数据
+users_df = pd.read_csv(USERS_FILE)
+deals_df = pd.read_csv(DEALS_FILE)
+feedbacks_df = pd.read_csv(FEEDBACKS_FILE)
 
-def generate_pivot_table(df,index,columns):
-  Table = df.pivot_table(index=index, columns=columns, values='Number of beds',aggfunc='sum',fill_value=0,margins=True)
-  Table = Table.astype(int)
-  return Table
+# 保存数据
+def save_data(df, file_path):
+    df.to_csv(file_path, index=False)
 
-Leasing_US = read_file("MOO HOUSING PRICING SHEET","December Leasing Tracker")
-Leasing_US['Tenant Name'] = Leasing_US['Tenant Name'].replace('', pd.NA)
-# Leasing_US = Leasing_US.drop(columns=[''])
-Leasing_US = Leasing_US.dropna()
-Leasing_US.columns=['Tenant','Property','Renewal','Agent','Lease Term','Term Catorgy','Number of beds','Deposit','Term','Signed Date','Special Note','Domestic']
-Leasing_US.loc[Leasing_US['Renewal'] == "YES", 'Renewal'] = 'Renew'
-Leasing_US.loc[Leasing_US['Renewal'] == "NO", 'Renewal'] = 'New'
-Leasing_US.loc[Leasing_US['Renewal'] == "No", 'Renewal'] = 'New'
-Leasing_US.loc[Leasing_US['Renewal'] == "Lease Transfer", 'Renewal'] = 'Transfer'
-Leasing_US.loc[Leasing_US['Term Catorgy'] == "short", 'Term Catorgy'] = 'Short'
-Leasing_US['Number of beds'] = pd.to_numeric(Leasing_US['Number of beds'], errors='coerce')
-# Leasing_US['Number of beds'] = Leasing_US['Number of beds'].astype(int)
-Leasing_US['Signed Date'] = pd.to_datetime(Leasing_US['Signed Date'])
-Leasing_US['Signed Date'] = Leasing_US['Signed Date'].dt.date
-Leasing_US['Region'] = 'US'
+# Streamlit 应用主入口
+def main():
+    st.title("佣金计算系统")
 
-Leasing_China = read_file("China Sales","Dec")
-Leasing_China['Term length'] = Leasing_China['Term length'].replace(to_replace='1年', value='12个月', regex=True)
-Leasing_China['Term length'] = Leasing_China['Term length'].str.replace('[^\d]', '', regex=True)
-Leasing_China['Term length'] = Leasing_China['Term length'].astype(int)
-Leasing_China.loc[Leasing_China['Term length'] >=6 , 'Term Catorgy'] = 'Long'
-Leasing_China.loc[Leasing_China['Term length'] < 6 , 'Term Catorgy'] = 'Short'
-Leasing_China['Region'] = 'China'
-Leasing_China['Number of beds'] = 1
-Leasing_China[['Term start', 'Term Ends']] = Leasing_China['Lease term and length'].str.split('-', expand=True)
-Leasing_China['Term Ends'] ='20'+ Leasing_China['Term Ends']
-Leasing_China['Term Ends'] = pd.to_datetime(Leasing_China['Term Ends'],format = '%Y.%m.%d')
-Leasing_China.loc[Leasing_China['Term Ends'] <= '2025-09-01', 'Term'] = 'Spring'
-Leasing_China.loc[Leasing_China['Term Ends'] > '2025-09-01', 'Term'] = 'Fall'
-Leasing_China.loc[Leasing_China['Renewal'] == "新合同", 'Renewal'] = 'New'
-Leasing_China.loc[Leasing_China['Renewal'] == "续租", 'Renewal'] = 'Renew'
-Leasing_China.loc[Leasing_China['Renewal'] == "短租", 'Renewal'] = 'New'
-Leasing_China.loc[Leasing_China['Renewal'] == "接转租", 'Renewal'] = 'Transfer'
-Leasing_China.loc[Leasing_China['Renewal'] == "Leo", 'Renewal'] = 'Leo'
-Leasing_China['Signed Date'] = pd.to_datetime(Leasing_China['Signed Date'])
-Leasing_China['Signed Date'] = Leasing_China['Signed Date'].dt.date
-Leasing_China = Leasing_China.drop(['Lease term and length','Term start','Term Ends'],axis=1)
-Leasing = pd.concat([Leasing_US,Leasing_China], join='inner',ignore_index=True)
+    # 登录或注册界面选择
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
 
-Leasing_all = read_file('Leasing Database','Sheet1')
-Leasing_all['Number of beds'] = pd.to_numeric(Leasing_all['Number of beds'], errors='coerce')
-Leasing_all['Signed Date'] = pd.to_datetime(Leasing_all['Signed Date'],format = 'mixed')
+    if not st.session_state.logged_in:
+        option = st.sidebar.selectbox("选择操作", ["登录", "注册"])
 
-# # Show a multiselect widget with the genres using `st.multiselect`.
-Region = st.multiselect(
-    "选择地区",
-    ["US", "China"],
-      default=["US", "China"]
-)
+        if option == "登录":
+            login()
+        elif option == "注册":
+            register()
 
-Term = st.multiselect(
-    "选择长/短",
-    ["Long", "Short"],
-      default=["Long", "Short"]
-)
+        return
 
-Category =  st.multiselect(
-    "选择春/秋季",
-    ["Spring", "Fall"],
-      default=["Spring", "Fall"]
-)
+    # 已登录用户界面
+    st.sidebar.header(f"欢迎, {st.session_state.user['name']}")
+    if st.sidebar.button("退出登录"):
+        st.session_state.logged_in = False
+        return
 
-Renewal =  st.multiselect(
-    "选择合同种类",
-    ["New", "Renew",'Transfer','Leo'],
-      default=["New", "Renew",'Transfer']
-)
+    # 根据角色显示对应界面
+    if st.session_state.user["role"] == "admin":
+        admin_dashboard()
+    else:
+        sales_dashboard()
 
-Domestic =  st.multiselect(
-    "选择房屋地区",
-    ["USC", "UCLA",'UCI','Leo'],
-      default=["USC", "UCLA",'UCI','Leo']
-)
+# 登录功能
+def login():
+    st.sidebar.header("登录")
+    username = st.sidebar.text_input("用户名")
+    password = st.sidebar.text_input("密码", type="password")
+    if st.sidebar.button("登录"):
+        user = authenticate(username, password)
+        if user:
+            st.session_state.logged_in = True
+            st.session_state.user = user
+            st.success(f"欢迎 {user['name']}！")
+        else:
+            st.sidebar.error("用户名或密码错误！")
 
+# 注册功能
+def register():
+    st.sidebar.header("注册")
+    name = st.sidebar.text_input("姓名")
+    username = st.sidebar.text_input("用户名")
+    password = st.sidebar.text_input("密码", type="password")
+    role = st.sidebar.radio("角色", ["sales", "admin"], format_func=lambda x: "销售" if x == "sales" else "管理员")
 
-# 设置起始日期和结束日期
-start_date = datetime(2024, 10, 25)  # 2024年11月1日
-end_date = datetime(2024, 12, 31)  # 2024年12月31日
+    if st.sidebar.button("注册"):
+        if not name or not username or not password:
+            st.sidebar.error("请填写所有字段！")
+        elif username_exists(username):
+            st.sidebar.error("用户名已存在！")
+        else:
+            new_user = {"username": username, "password": password, "name": name, "role": role}
+            add_user(new_user)
+            st.sidebar.success("注册成功！请返回登录。")
 
-# 创建日期区间选择器
-selected_dates = st.slider(
-    "选择日期区间:",
-    min_value=start_date,
-    max_value=end_date,
-    value=(start_date, end_date),  # 默认选定区间为12月1日至12月31日
-    format="YYYY-MM-DD"  # 格式化显示日期
-)
+# 检查用户名是否存在
+def username_exists(username):
+    return not users_df[users_df["username"] == username].empty
 
-# 显示选择的日期区间
-st.write(f"你选择的日期区间是: 从 {selected_dates[0].strftime('%Y-%m-%d')} 到 {selected_dates[1].strftime('%Y-%m-%d')}")
+# 添加新用户
+def add_user(user):
+    global users_df
+    users_df = users_df.append(user, ignore_index=True)
+    save_data(users_df, USERS_FILE)
 
-# Filter the dataframe based on the widget input and reshape it.
-df_filtered = Leasing_all[(Leasing_all["Region"].isin(Region)) & (Leasing_all["Signed Date"].between(selected_dates[0],selected_dates[1]) & (Leasing_all["Term Catorgy"].isin(Term)) &(Leasing_all["Term"].isin(Category)) & (Leasing_all["Renewal"].isin(Renewal)))]
-st.sidebar.header("选择透视表展示")
-row_options = st.sidebar.multiselect('请选择展示行', options=['Region','Agent'], default=['Region'])
-column_options = st.sidebar.multiselect('请选择展示列', options=['Domestic','Term','Renewal','Term Catorgy'], default=['Domestic','Term','Renewal'])
-df_reshaped = generate_pivot_table(df_filtered,row_options,column_options)
+# 用户身份验证
+def authenticate(username, password):
+    user = users_df[(users_df["username"] == username) & (users_df["password"] == password)]
+    if not user.empty:
+        return user.iloc[0].to_dict()
+    return None
 
-# # Display the data as a table using `st.dataframe`.
-st.write('Leasing Data')
-st.dataframe(
-    df_reshaped,
-    use_container_width=True,
-    # column_config={"selected_dates": st.column_config.TextColumn("Time")},
-)
-styled_pivot_table = df_reshaped.style.set_table_styles(
-    [{'selector': 'thead th', 'props': [('text-align', 'center')]}]
-)
+# 销售界面
+def sales_dashboard():
+    global deals_df, feedbacks_df
+    user = st.session_state.user
+    st.header("销售界面")
 
-@st.cache_data(ttl=300)
-def save_data():
-  old = read_file('Leasing Database','Sheet1')
-  old = old.astype(Leasing.dtypes.to_dict())
-  combined_data = pd.concat([old, Leasing], ignore_index=True)
-  Temp = pd.concat([old, combined_data])
-  final_data = Temp[Temp.duplicated(subset = ['Tenant','Property','Renewal'],keep=False) == False]
-  scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-  credentials = Credentials.from_service_account_info(
-  st.secrets["GOOGLE_APPLICATION_CREDENTIALS"], 
-  scopes=scope)
-  gc = gspread.authorize(credentials)
-  target_spreadsheet_id = 'Leasing Database'  # 目标表格的ID
-  target_sheet_name = 'Sheet1'  # 目标表格的工作表名称
-  target_sheet = gc.open(target_spreadsheet_id).worksheet(target_sheet_name)
-  
-  return set_with_dataframe(target_sheet, final_data, row=(len(old) + 2),include_column_header=False)
-  
-save_data()
+    # 查看自己的成单
+    user_deals = deals_df[deals_df["sales"] == user["username"]]
+    st.subheader("我的成单")
+    st.table(user_deals)
+
+    # 提交反馈
+    st.subheader("提交反馈")
+    selected_deal_id = st.selectbox("选择要反馈的成单", user_deals["id"])
+    feedback = st.text_area("反馈内容", "")
+    if st.button("提交反馈"):
+        if feedback:
+            new_feedback = {"id": len(feedbacks_df) + 1, "sales": user["username"], "deal_id": selected_deal_id, "feedback": feedback, "status": "待处理"}
+            feedbacks_df = feedbacks_df.append(new_feedback, ignore_index=True)
+            save_data(feedbacks_df, FEEDBACKS_FILE)
+            st.success("反馈提交成功！")
+        else:
+            st.warning("请输入反馈内容。")
+
+    # 查看自己提交的反馈
+    st.subheader("我的反馈")
+    user_feedbacks = feedbacks_df[feedbacks_df["sales"] == user["username"]]
+    st.table(user_feedbacks)
+
+# 管理员界面
+def admin_dashboard():
+    global feedbacks_df
+    st.header("管理员界面")
+
+    # 查看所有反馈
+    st.subheader("所有反馈")
+    all_feedbacks = feedbacks_df
+    st.table(all_feedbacks)
+
+    # 更新反馈处理状态
+    st.subheader("处理反馈")
+    feedback_id = st.selectbox("选择反馈ID", all_feedbacks["id"])
+    feedback_status = st.radio("反馈状态", ["待处理", "已处理"], index=0 if all_feedbacks[all_feedbacks["id"] == feedback_id]["status"].values[0] == "待处理" else 1)
+    if st.button("更新状态"):
+        feedbacks_df.loc[feedbacks_df["id"] == feedback_id, "status"] = feedback_status
+        save_data(feedbacks_df, FEEDBACKS_FILE)
+        st.success("反馈状态更新成功！")
+
+if __name__ == "__main__":
+    main()
