@@ -2,14 +2,14 @@ import streamlit as st
 import pandas as pd
 
 # 数据文件路径
-USERS_FILE = "data/users.csv"
-DEALS_FILE = "data/deals.csv"
-FEEDBACKS_FILE = "data/feedbacks.csv"
+USERS_FILE = "users.csv"
+# DEALS_FILE = "data/deals.csv"
+# FEEDBACKS_FILE = "data/feedbacks.csv"
 
 # 读取数据
 users_df = pd.read_csv(USERS_FILE)
-deals_df = pd.read_csv(DEALS_FILE)
-feedbacks_df = pd.read_csv(FEEDBACKS_FILE)
+# deals_df = pd.read_csv(DEALS_FILE)
+# feedbacks_df = pd.read_csv(FEEDBACKS_FILE)
 
 # 保存数据
 def save_data(df, file_path):
